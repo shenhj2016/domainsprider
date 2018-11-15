@@ -9,3 +9,4 @@ target/
 *.class
 *.log
 .idea/
+nohup.out
