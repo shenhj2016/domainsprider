@@ -36,14 +36,15 @@ def getUrl(domain):
     return url
 
 
-def sendDomain(domain,proxies):
+def sendDomain(domain,proxies = None):
     # 2. 表示忽略未经核实的SSL证书认证
     context = ssl._create_unverified_context()
     request = urllib2.Request(getUrl(domain), headers=headers)
-    # 以下三段设置代理
-    proxy_s = urllib2.ProxyHandler(proxies)
-    opener = urllib2.build_opener(proxy_s)
-    urllib2.install_opener(opener)
+    if proxies is not None:
+        # 以下三段设置代理
+        proxy_s = urllib2.ProxyHandler(proxies)
+        opener = urllib2.build_opener(proxy_s)
+        urllib2.install_opener(opener)
 
     # 3. 在urlopen()方法里 指明添加 context 参数
     response = urllib2.urlopen(request, context=context)
@@ -103,60 +104,50 @@ def init():
     cursor = DB.cursor()
     DB.autocommit(True)
     # 获取代理
-    ip_queue = proxy.get_all_ip()
+    # ip_queue = proxy.get_all_ip()
 
 
 if __name__ == '__main__':
-    context = ssl._create_unverified_context()
-    # 以下三段设置代理
-    proxy_s = urllib2.ProxyHandler({"http":"http://36.48.73.16:80"})
-    opener = urllib2.build_opener(proxy_s)
-    urllib2.install_opener(opener)
-    request = urllib2.Request("http://shenhj.frp.ngarihealth.com/welcome", headers=headers)
-
-    # 3. 在urlopen()方法里 指明添加 context 参数
-    response = urllib2.urlopen(request, context=context)
-    res = response.read()
-    print res
-    # init()
-    # # 但是每次都这么写实在太繁琐，所以，Python引入了with语句来自动帮我们调用close()方法
-    # with open(sys.argv[1], 'r') as f:
-    #     for line in f.readlines():
-    #         try:
-    #             term = line.strip()
-    #             if en > 0:# 英文需要传0，中文需要传1
-    #                 if len(term) > 15:
-    #                     continue
-    #                 term = test.hanzi2pinyin_split(term,"")
-    #             else:
-    #                 if len(term) > 9:
-    #                     continue
-    #             time.sleep(3)
-    #             domain = term + ".com"
-    #             domain = domain.encode("utf-8")
-    #             proxy_ip = ip_queue.get()
-    #             proxies = {'http': proxy_ip}
-    #             print proxies
-    #             data = sendDomain(domain=domain,proxies=proxies)
-    #             if findByDomain(domain):
-    #                 updateDomain(data)
-    #             else:
-    #                 addResult = addDoamin(data)
-    #         except DataException as dataerror:
-    #             logging.exception(dataerror.message)
-    #             try:
-    #                 time.sleep(3)
-    #                 proxy_ip = ip_queue.get()
-    #                 proxies = {'http': proxy_ip}
-    #                 data = sendDomain(domain=domain,proxies=proxies)
-    #                 if findByDomain(domain):
-    #                     updateDomain(data)
-    #                 else:
-    #                     addResult = addDoamin(data)
-    #             except Exception as e:
-    #                 logging.exception(e)
-    #                 continue
-    #         except Exception as e:
-    #             logging.exception(e)
-    # DB.close()
+    init()
+    # 但是每次都这么写实在太繁琐，所以，Python引入了with语句来自动帮我们调用close()方法
+    with open(sys.argv[1], 'r') as f:
+        for line in f.readlines():
+            try:
+                term = line.strip()
+                if en > 0:# 英文需要传0，中文需要传1
+                    if len(term) > 15:
+                        continue
+                    term = test.hanzi2pinyin_split(term,"")
+                else:
+                    if len(term) > 9:
+                        continue
+                time.sleep(5)
+                domain = term + ".com"
+                domain = domain.encode("utf-8")
+                # 代理无效
+                # proxy_ip = ip_queue.get()
+                # proxies = {'http': proxy_ip}
+                # print proxies
+                data = sendDomain(domain=domain)
+                if findByDomain(domain):
+                    updateDomain(data)
+                else:
+                    addResult = addDoamin(data)
+            except DataException as dataerror:
+                logging.exception(dataerror.message)
+                try:
+                    time.sleep(5)
+                    # proxy_ip = ip_queue.get()
+                    # proxies = {'http': proxy_ip}
+                    data = sendDomain(domain=domain)
+                    if findByDomain(domain):
+                        updateDomain(data)
+                    else:
+                        addResult = addDoamin(data)
+                except Exception as e:
+                    logging.exception(e)
+                    continue
+            except Exception as e:
+                logging.exception(e)
+    DB.close()
 
